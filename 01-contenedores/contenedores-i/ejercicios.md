@@ -151,3 +151,5 @@ Si queremos eliminarlos por completo del sistema, podemos ejecutar el siguiente 
 ```
 docker rm $(docker ps -aq)
 ```
+
+Si queremos eliminar los contenedores mientras están en ejecución, podemos añadir la opción *-f* al comando rm, que forzará en primer lugar la detención de los contenedores utilizando la señal SIGKILL.
