@@ -3,6 +3,7 @@
 Para contenerizar nuestra aplicación *hello-lemoncoder* podemos crear nuestro fichero Dockerfile manualmente o utilizar las herramientas que nos provee Visual Studio Code junto con extensiones como Docker y Dev Containers.
 
 Para ello hacemos click en el buscador.
+
 ![](images/vscode_search_bar.png)
 
 Y le damos a Show and Run commands (o alternativamente utilizamos el atajo Ctrl + Shift + P) y buscamos la opción *Add Docker Files to Workspace*.
@@ -134,7 +135,7 @@ Finalmente nos preguntará si queremos añadir algún componente más al contene
 
 ![](images/vscode_run_container_2.png)
 
-Si comprobamos los contenedores que tenemos activo en este momento, vemos que ha sido levantado uno por VS Code.
+Si comprobamos los contenedores que tenemos activos en este momento, vemos que ha sido levantado uno por VS Code.
 
 ```shell
 $ docker ps
