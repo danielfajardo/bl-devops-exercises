@@ -71,6 +71,8 @@ $ tree --du -h
 
 ## 3. Creación de script bash que agrupe los ejerciciones anteriores y permita alimentar file1.txt a través de parámetro
 
+[Bash script](ejercicio3.sh)
+
 Ejecución del script con una cadena vacía.
 ```shell
 $ ./ejercicio3.sh $(pwd) ''
@@ -121,6 +123,8 @@ Hola lemoncoders!
 
 ## 4. Creación de script bash que descargue el contenido de una página web a un fichero y busque en dicho fichero una palabra dada como parámetro al invocar el script
 
+[Bash script](ejercicio4.sh)
+
 Ejecución de script en la que no aparece en el texto la palabra.
 ```
 $ ./ejercicio4.sh DevOpsA
@@ -141,6 +145,8 @@ OCCURRENCES=$(grep -io $1 -n $FILE_NAME)
 ```
 
 ## 5. Modificar el ejercicio anterior de forma que la URL de la página web se pase por parámetro y también verifique que la llamada al script sea correcta
+
+[Bash script](ejercicio5.sh)
 
 Ejecución para comprobar el chequeo de parámetros.
 
