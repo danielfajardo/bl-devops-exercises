@@ -4,12 +4,6 @@ DEFAULT_CONTENT='Que me gusta la bash!!!!'
 
 FILE_CONTENT=${1:-${DEFAULT_CONTENT}}
 
-# Control check
-if [[ $# -ne 1 ]]; then
-    echo "Error: Bad arguments. Please use the following syntax: ejercicio3.sh FILE_CONTENT"
-    exit 1
-fi
-
 # Create folder structure
 mkdir -p foo/{dummy,empty}/
 

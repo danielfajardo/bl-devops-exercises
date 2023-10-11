@@ -73,6 +73,33 @@ $ tree --du -h
 
 [Bash script](ejercicio3.sh)
 
+Ejecución del script sin parámetros.
+```shell
+$ ./ejercicio3.sh
+TREE STRUCTURE
+--------------------
+[ 23K]  .
+├── [ 603]  ejercicio3.sh
+├── [ 676]  ejercicio4.sh
+├── [ 721]  ejercicio5.sh
+├── [5.3K]  ejercicios.md
+└── [ 12K]  foo
+    ├── [4.0K]  dummy
+    │   └── [  25]  file1.txt
+    └── [4.0K]  empty
+        └── [  25]  file2.txt
+
+  23K used in 3 directories, 6 files
+
+FILES CONTENT
+--------------------
+==> foo/dummy/file1.txt <==
+Que me gusta la bash!!!!
+
+==> foo/empty/file2.txt <==
+Que me gusta la bash!!!!
+```
+
 Ejecución del script con una cadena vacía.
 ```shell
 $ ./ejercicio3.sh ''
