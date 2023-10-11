@@ -91,6 +91,7 @@ Pero antes hay que instalar los paquetes para utilizar los comandos *ping* y *cU
 ```shell
 apt update && apt upgrade
 apt -y install curl
+apt -y install iputils-ping
 ```
 
 Una vez instalados comprobamos la conectividad del contenedor de ubuntu con nginx.
