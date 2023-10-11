@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [[ $# -ne 1 ]]; then
+    echo "Se necesita un único argumento para ejecutar este script. Usa por ejemplo: ejercicio4.sh DevOps"
+    exit 1
+fi
+
 readonly URL='https://lemoncode.net/bootcamp-devops#bootcamp-devops/inicio'
 readonly FILE_NAME='bootcamp_devops_info.txt'
 WORD=$1

@@ -46,7 +46,7 @@ $ tree --du -h
 
 Basándonos en el resultado del ejercicio anterior, copiamos el contenido de *file1.txt* en *file2.txt* y comprobamos que se ha copiado correctamente.
 ```shell
-$ cp foo/dummy/file{1,2}.txt
+$ cat foo/dummy/file1.txt > foo/dummy/file2.txt
 $ head -n -0 foo/dummy/file*.txt
 ==> foo/dummy/file1.txt <==
 Me encanta la bash!!
@@ -75,55 +75,67 @@ $ tree --du -h
 
 Ejecución del script con una cadena vacía.
 ```shell
-$ ./ejercicio3.sh $(pwd) ''
+$ ./ejercicio3.sh ''
 TREE STRUCTURE
 --------------------
-[ 17K]  .
-├── [ 960]  ejercicio3.sh
+[ 23K]  .
+├── [ 751]  ejercicio3.sh
+├── [ 529]  ejercicio4.sh
+├── [ 721]  ejercicio5.sh
+├── [5.1K]  ejercicios.md
 └── [ 12K]  foo
     ├── [4.0K]  dummy
     │   └── [  25]  file1.txt
     └── [4.0K]  empty
         └── [  25]  file2.txt
 
-  17K used in 3 directories, 3 files
+  23K used in 3 directories, 6 files
 
 FILES CONTENT
 --------------------
-==> /home/danielfgon/bootcamp_devops/foo/dummy/file1.txt <==
+==> foo/dummy/file1.txt <==
 Que me gusta la bash!!!!
 
-==> /home/danielfgon/bootcamp_devops/foo/empty/file2.txt <==
+==> foo/empty/file2.txt <==
 Que me gusta la bash!!!!
 ```
 
 Ejecución con una cadena no vacía.
 ```shell
-$ ./ejercicio3.sh $(pwd) 'Hola lemoncoders!'
+$ ./ejercicio3.sh 'Hola lemoncoders!'
 TREE STRUCTURE
 --------------------
-[ 17K]  .
-├── [ 960]  ejercicio3.sh
+[ 23K]  .
+├── [ 751]  ejercicio3.sh
+├── [ 529]  ejercicio4.sh
+├── [ 721]  ejercicio5.sh
+├── [5.1K]  ejercicios.md
 └── [ 12K]  foo
     ├── [4.0K]  dummy
     │   └── [  18]  file1.txt
     └── [4.0K]  empty
         └── [  18]  file2.txt
 
-  17K used in 3 directories, 3 files
+  23K used in 3 directories, 6 files
 
 FILES CONTENT
 --------------------
-==> /home/danielfgon/bootcamp_devops/foo/dummy/file1.txt <==
+==> foo/dummy/file1.txt <==
 Hola lemoncoders!
 
-==> /home/danielfgon/bootcamp_devops/foo/empty/file2.txt <==
+==> foo/empty/file2.txt <==
 Hola lemoncoders!
 ```
 
 ## 4. Creación de script bash que descargue el contenido de una página web a un fichero y busque en dicho fichero una palabra dada como parámetro al invocar el script
 
 [Bash script](ejercicio4.sh)
+
+Ejecución del script sin parámetros.
+```
+$ ./ejercicio4.sh
+Se necesita un único argumento para ejecutar este script. Usa por ejemplo: ejercicio4.sh DevOps
+```
 
 Ejecución de script en la que no aparece en el texto la palabra.
 ```

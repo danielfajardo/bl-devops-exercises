@@ -1,34 +1,29 @@
 #!/bin/bash -e
 
-USAGE_MSG='Please use the following syntax: ejercicio3.sh BASE_DIR FILE_CONTENT'
 DEFAULT_CONTENT='Que me gusta la bash!!!!'
 
-BASE_DIR=$1
-FILE_CONTENT=${2:-${DEFAULT_CONTENT}}
+FILE_CONTENT=${1:-${DEFAULT_CONTENT}}
 
 # Control check
-if [[ $# -lt 2 ]]; then
-    echo "Error: Missing arguments. ${USAGE_MSG}"
-    exit 1
-elif [[ $# -gt 2 ]]; then
-    echo "Error: Too many arguments. ${USAGE_MSG}"
+if [[ $# -ne 1 ]]; then
+    echo "Error: Bad arguments. Please use the following syntax: ejercicio3.sh FILE_CONTENT"
     exit 1
 fi
 
-# Create folder structure based on BASE_DIR
-mkdir -p ${BASE_DIR}/foo/{dummy,empty}/
+# Create folder structure
+mkdir -p foo/{dummy,empty}/
 
 # Create file1.txt based on FILE_CONTENT
-echo ${FILE_CONTENT} > ${BASE_DIR}/foo/dummy/file1.txt
+echo ${FILE_CONTENT} > foo/dummy/file1.txt
 
-# Create empty file (although really unnecessary)
-touch ${BASE_DIR}/foo/dummy/file2.txt
+# Create empty file
+touch foo/dummy/file2.txt
 
 # Copy file1.txt content into file2.txt
-cp ${BASE_DIR}/foo/dummy/file{1,2}.txt
+cat foo/dummy/file1.txt > foo/dummy/file2.txt
 
 # Move file2.txt into empty folder
-mv ${BASE_DIR}/foo/{dummy,empty}/file2.txt
+mv foo/{dummy,empty}/file2.txt
 
 # Show tree
 echo 'TREE STRUCTURE
@@ -38,5 +33,5 @@ echo
 
 # Show contents
 echo 'FILES CONTENT
---------------------' && head -n -0 ${BASE_DIR}/foo/*/*.txt
+--------------------' && head -n -0 foo/*/*.txt
 
