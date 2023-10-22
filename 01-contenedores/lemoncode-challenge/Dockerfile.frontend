@@ -1,0 +1,19 @@
+FROM node:lts-alpine
+
+ENV NODE_ENV=production
+
+WORKDIR /usr/src/app
+
+COPY ["dotnet-stack/frontend/package.json", "dotnet-stack/frontend/package-lock.json*", "dotnet-stack/frontend/npm-shrinkwrap.json*", "./"]
+
+RUN npm install --production --silent && mv node_modules ../
+
+COPY ./dotnet-stack/frontend/ .
+
+EXPOSE 3000
+
+RUN chown -R node /usr/src/app
+
+USER node
+
+CMD ["npm", "start"]
