@@ -94,7 +94,7 @@ Vemos que la información sigue estando disponible, por lo que seguimos con el s
 
 ## Configuración de Backend
 
-Generamos con VSCode la plantilla del Dockerfile y lo editamos para que funcione en la estructura de este repositorio, quedando así:
+Generamos con VSCode la plantilla del [Dockerfile](Dockerfile.backend) y lo editamos para que funcione en la estructura de este repositorio, quedando así:
 
 ```docker
 FROM mcr.microsoft.com/dotnet/aspnet:3.1 AS base
@@ -127,7 +127,7 @@ COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "backend.dll"]
 ```
 
-Editamos dentro del fichero *appsettings.json* el *ConnectionString* para añadirle la autenticación de MongoDB y el hostname correcto, quedando así:
+Editamos dentro del fichero [appsettings.json](dotnet-stack/backend/appsettings.json) el *ConnectionString* para añadirle la autenticación de MongoDB y el hostname correcto, quedando así:
 
 ```json
 {
@@ -170,7 +170,7 @@ docker run -d --name backend \
 
 ## Configuración del Frontend
 
-Generamos con VSCode la plantilla del Dockerfile y lo editamos para que funcione en la estructura de este repositorio, quedando así:
+Generamos con VSCode la plantilla del [Dockerfile](Dockerfile.frontend) y lo editamos para que funcione en la estructura de este repositorio, quedando así:
 
 ```docker
 FROM node:lts-alpine
@@ -295,7 +295,7 @@ Accedemos la URL [http://localhost:8080/](http://localhost:8080/) para ver el co
 
 El objetivo es realizar el ejercicio anterior a través de Docker Compose. Para ello, hay que revisar todos los comandos utilizados para desplegar nuestros contenedores y "traducirlos" a formato YAML.
 
-Para ello creamos un fichero que se llame por ejemplo, *docker-compose.yml*, cuyo contenido sea el siguiente:
+Para ello creamos un fichero que se llame por ejemplo, [docker-compose.yml](docker-compose.yml), cuyo contenido sea el siguiente:
 
 ```yaml
 version: '3.4'
