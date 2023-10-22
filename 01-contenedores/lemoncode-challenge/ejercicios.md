@@ -290,3 +290,239 @@ Accedemos la URL [http://localhost:8080/](http://localhost:8080/) para ver el co
 ![](images/frontend.png)
 
 ¡Listo! ¡Ya tenemos nuestra app funcionando!
+
+# Ejercicio 2
+
+El objetivo es realizar el ejercicio anterior a través de Docker Compose. Para ello, hay que revisar todos los comandos utilizados para desplegar nuestros contenedores y "traducirlos" a formato YAML.
+
+Para ello creamos un fichero que se llame por ejemplo, *docker-compose.yml*, cuyo contenido sea el siguiente:
+
+```yaml
+version: '3.4'
+
+services:
+  mongodb:
+    image: mongo:7.0.2
+    hostname: some-mongo
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - lemoncode-challenge
+    environment:
+      - "MONGO_INITDB_ROOT_USERNAME=admin"
+      - "MONGO_INITDB_ROOT_PASSWORD=password"
+
+
+  backend:
+    image: backend:0.0.1
+    hostname: topics-api
+    networks:
+      - lemoncode-challenge
+    restart: always  
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+  
+  frontend:
+    image: frontend:0.0.1
+    networks:
+      - lemoncode-challenge
+    restart: always
+    ports:
+      - "8080:3000"
+    environment:
+      - "API_URI=http://topics-api:5000/api/topics"
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+
+volumes:
+  mongodb_data:
+
+networks:
+  lemoncode-challenge:
+```
+
+Una vez creado, ejecutamos el comando start de Docker Compose.
+
+```
+docker compose up
+```
+
+Si todo ha ido correcto, habrá levantado los 3 contenedores.
+
+```shell
+$ docker ps -a
+CONTAINER ID   IMAGE            COMMAND                  CREATED          STATUS          PORTS                    NAMES
+2aed6229e7a4   frontend:0.0.1   "docker-entrypoint.s…"   17 seconds ago   Up 15 seconds   0.0.0.0:8080->3000/tcp   lemoncode-challenge-frontend-1
+11074b2319af   backend:0.0.1    "dotnet backend.dll"     17 seconds ago   Up 15 seconds   5000/tcp                 lemoncode-challenge-backend-1 
+389442350a17   mongo:7.0.2      "docker-entrypoint.s…"   17 seconds ago   Up 15 seconds   27017/tcp                lemoncode-challenge-mongodb-1 
+```
+
+En este momento podemos acceder a la URL [http://localhost:8080/](http://localhost:8080/) y ver el resultado. *¡Sorpresa! No hay ningún tópico.*
+
+Vamos a revisar los volúmenes y las redes que tenemos creadas en Docker.
+
+```shell
+$ docker volume ls | grep mongodb_data
+local     lemoncode-challenge_mongodb_data
+local     mongodb_data
+
+$ docker network ls | grep lemoncode-challenge
+2060464a8a18   lemoncode-challenge                       bridge    local
+b3fbfc92ab2e   lemoncode-challenge_lemoncode-challenge   bridge    local
+```
+
+Parece que ha creado un nuevo volumen y red, cuando realmente ya existían. Si observamos el log del compose, vemos que ya nos indicaba que lo había creado.
+
+```shell
+[+] Running 4/4
+ ✔ Network lemoncode-challenge_lemoncode-challenge  Created                                                                                                                 0.1s 
+ ✔ Container lemoncode-challenge-frontend-1         Created                                                                                                                 0.2s 
+ ✔ Container lemoncode-challenge-backend-1          Created                                                                                                                 0.2s 
+ ✔ Container lemoncode-challenge-mongodb-1          Created                                                                                                                 0.2s 
+```
+
+¿Qué podemos hacer para reusar justamente el volumen y la red que teníamos creados? Tal como indican en la documentación ([Use a pre-existing network](https://docs.docker.com/compose/networking/#use-a-pre-existing-network)), le añadimos en la configuración *external=true* para ambos, quedando tal que así:
+
+```yaml
+volumes:
+  mongodb_data:
+    external: true
+
+networks:
+  lemoncode-challenge:
+    external: true
+```
+
+Si eliminamos el volumen y la red creada por compose y volvemos a ejecutar, observamos que en el log ya no aparece que ha creado la red.
+
+```shell
+[+] Running 3/3
+ ✔ Container lemoncode-challenge-mongodb-1   Created                                                                                                                        0.2s 
+ ✔ Container lemoncode-challenge-frontend-1  Created                                                                                                                        0.2s 
+ ✔ Container lemoncode-challenge-backend-1   Created                                                                                                                        0.2s 
+```
+
+Si accedemos a la web, ya vemos los tópicos correctamente como en el ejercicio 1, pues ahora está usando el mismo volumen que contiene nuestros datos de MongoDB.
+
+## Algunos comandos interesantes
+
+Adicionalmente, Compose nos ofrece algunos comandos interesantes para consultar qué está corriendo en el entorno como *top*.
+
+```shell
+$ docker compose top
+lemoncode-challenge-backend-1
+UID    PID      PPID     C    STIME   TTY   TIME       CMD
+5678   156058   156025   5    18:14   ?     00:00:02   dotnet backend.dll
+
+lemoncode-challenge-frontend-1
+UID    PID      PPID     C    STIME   TTY   TIME       CMD
+1000   156044   155999   6    18:14   ?     00:00:02   npm start
+1000   156330   156044   1    18:14   ?     00:00:00   node server.js
+
+lemoncode-challenge-mongodb-1
+UID   PID      PPID     C    STIME   TTY   TIME       CMD
+999   156043   155973   5    18:14   ?     00:00:01   mongod --auth --bind_ip_all
+```
+
+También nos da la información de las imágenes utilizadas por los contenedores del entorno.
+
+```shell
+$ docker compose images
+CONTAINER                        REPOSITORY          TAG                 IMAGE ID            SIZE
+lemoncode-challenge-backend-1    backend             0.0.1               1839ee9c94a5        214MB
+lemoncode-challenge-frontend-1   frontend            0.0.1               e9edb49b5946        193MB
+lemoncode-challenge-mongodb-1    mongo               7.0.2               3be86e9501b0        748MB
+```
+
+Por último, vamos a revisar la configuración del entorno con el comando config.
+
+```shell
+$ docker compose config
+name: lemoncode-challenge
+services:
+  backend:
+    build:
+      context: /mnt/c/DanielProjects/bl-devops-exercises/01-contenedores/lemoncode-challenge
+      dockerfile: Dockerfile.backend
+    hostname: topics-api
+    image: backend:0.0.1
+    networks:
+      lemoncode-challenge: null
+    restart: always
+  frontend:
+    build:
+      context: /mnt/c/DanielProjects/bl-devops-exercises/01-contenedores/lemoncode-challenge
+      dockerfile: Dockerfile.frontend
+    environment:
+      API_URI: http://topics-api:5000/api/topics
+    image: frontend:0.0.1
+    networks:
+      lemoncode-challenge: null
+    ports:
+    - mode: ingress
+      target: 3000
+      published: "8080"
+      protocol: tcp
+    restart: always
+  mongodb:
+    environment:
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_ROOT_USERNAME: admin
+    hostname: some-mongo
+    image: mongo:7.0.2
+    networks:
+      lemoncode-challenge: null
+    volumes:
+    - type: volume
+      source: mongodb_data
+      target: /data/db
+      volume: {}
+networks:
+  lemoncode-challenge:
+    name: lemoncode-challenge
+    external: true
+volumes:
+  mongodb_data:
+    name: mongodb_data
+    external: true
+```
+
+Observamos que Docker ha inferido varias propiedades como *name* tanto en la raíz como en la red y volumen, que podríamos sobrescribir en caso de que fuera necesario.
+
+Por último vamos a bajar el entorno con el comando *stop* que va a apagar cada contenedor de manera ordenada. Si después de haber hecho un stop, queremos volverlo a levantar, podemos hacer uso de *start*.
+```shell
+$ docker compose stop
+[+] Stopping 3/3
+ ✔ Container lemoncode-challenge-frontend-1  Stopped                                                                                                                       10.5s 
+ ✔ Container lemoncode-challenge-backend-1   Stopped                                                                                                                        0.6s 
+ ✔ Container lemoncode-challenge-mongodb-1   Stopped                                                                                                                        0.7s 
+```
+
+Si además queremos eliminarlo, podemos directamente utilizar el comando *down*, que se encargará de apagarlo de manera ordenada y eliminarlo.
+
+```shell
+$ docker compose down
+[+] Running 3/3
+ ✔ Container lemoncode-challenge-mongodb-1   Removed                                                                                                                        0.7s 
+ ✔ Container lemoncode-challenge-backend-1   Removed                                                                                                                        0.6s 
+ ✔ Container lemoncode-challenge-frontend-1  Removed                                                                                                                       10.6s
+```
+
+Otra opción habría sido la siguiente, en caso de que quisieramos hacer una salida abrupta del código (por ejemplo, si se ha quedado bloqueado el servicio) a través de las opciones *kill* y *rm*.
+
+```shell
+$ docker compose kill
+[+] Killing 3/3
+ ✔ Container lemoncode-challenge-backend-1   Killed                                                                                                                         0.9s 
+ ✔ Container lemoncode-challenge-frontend-1  Killed                                                                                                                         1.0s 
+ ✔ Container lemoncode-challenge-mongodb-1   Killed                                                                                                                         0.8s 
+
+$ docker compose rm
+? Going to remove lemoncode-challenge-frontend-1, lemoncode-challenge-mongodb-1, lemoncode-challenge-backend-1 Yes
+[+] Removing 3/3
+ ✔ Container lemoncode-challenge-backend-1   Removed                                                                                                                        0.1s 
+ ✔ Container lemoncode-challenge-frontend-1  Removed                                                                                                                        0.1s 
+ ✔ Container lemoncode-challenge-mongodb-1   Removed                                                                                                                        0.1s 
+```

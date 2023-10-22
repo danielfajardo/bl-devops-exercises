@@ -1,0 +1,45 @@
+version: '3.4'
+
+services:
+  mongodb:
+    image: mongo:7.0.2
+    hostname: some-mongo
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - lemoncode-challenge
+    environment:
+      - "MONGO_INITDB_ROOT_USERNAME=admin"
+      - "MONGO_INITDB_ROOT_PASSWORD=password"
+
+
+  backend:
+    image: backend:0.0.1
+    hostname: topics-api
+    networks:
+      - lemoncode-challenge
+    restart: always  
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+  
+  frontend:
+    image: frontend:0.0.1
+    networks:
+      - lemoncode-challenge
+    restart: always
+    ports:
+      - "8080:3000"
+    environment:
+      - "API_URI=http://topics-api:5000/api/topics"
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+
+volumes:
+  mongodb_data:
+    external: true
+
+networks:
+  lemoncode-challenge:
+    external: true
