@@ -22,6 +22,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    depends_on:
+      - mongodb
   
   frontend:
     image: frontend:0.0.1
@@ -35,6 +37,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    depends_on:
+      - backend
 
 volumes:
   mongodb_data:
