@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todoapp-memory
+spec:
+  selector:
+    matchLabels:
+      app: todoapp-memory
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: todoapp-memory
+    spec:
+      containers:
+      - name: todoapp-memory
+        image: todoapp-monolith-memory:0.0.1
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "15m"
+          limits:
+            memory: "256Mi"
+            cpu: "30m"
+        ports:
+        - containerPort: 4000
+          name: app
+        env:
+        - name: NODE_ENV
+          value: production
+        - name: PORT
+          value: "4000"
