@@ -232,3 +232,9 @@ $ kubectl delete -f .
 deployment.apps "todoapp-memory" deleted
 service "loadbalancer" deleted
 ```
+
+A continuación, bajamos el cluster de minikube
+
+```shell
+minikube stop
+```
