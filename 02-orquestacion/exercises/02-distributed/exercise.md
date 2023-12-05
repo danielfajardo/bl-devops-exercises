@@ -2,6 +2,8 @@
 
 El equipo de desarrollo de *Lemoncode* nos ha pedido disponibilizar dos aplicaciones, una UI expuesta a través de NGINX y una API que corre sobre Express/Node.js, ambas accesible desde un Ingress. Para este ejercicio, vamos a utilizar de nuevo *minikube* y algunos comandos de *Docker* para construir la imagen.
 
+![](./images/distributed.png)
+
 ## ⚠️ Antes de comenzar... ⚠️
 
 En primer lugar debemos revisar si minikube soporta Ingress para el driver y el sistema operativo donde queremos utilizarlo.

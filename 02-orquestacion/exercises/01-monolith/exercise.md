@@ -2,6 +2,8 @@
 
 El equipo de desarrollo de *Lemoncode* nos ha entregado un nuevo código fuente de su aplicación junto con una serie de requisitos para solventar los problemas del monolito en memoria a través del uso de una base de datos. Para este ejercicio, vamos a utilizar de nuevo *minikube*  y algunos comandos de *Docker* para construir la imagen.
 
+![](./images/monolith.png)
+
 ## Inicialización del cluster y creación de la imagen
 
 Lo primero que vamos a realizar es levantar el cluster de minikube.

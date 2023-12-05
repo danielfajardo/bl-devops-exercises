@@ -2,6 +2,8 @@
 
 El equipo de desarrollo de *Lemoncode* nos ha entregado el código fuente de una aplicación monolítica, junto con su fichero *Dockerfile*, para desplegarla en Kubernetes. Para ello vamos a utilizar *minikube*  y algunos comandos de *Docker* para construir la imagen.
 
+![](./images/monolith-in-mem.png)
+
 ## Inicialización del cluster y creación de la imagen
 
 Lo primero que vamos a realizar es levantar el cluster de minikube.
