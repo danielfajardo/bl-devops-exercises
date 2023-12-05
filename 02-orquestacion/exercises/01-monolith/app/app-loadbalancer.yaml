@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: loadbalancer-todoapp
+spec:
+  type: LoadBalancer
+  selector:
+    app: todoapp
+  ports:
+  - port: 4000
+    targetPort: 4000
