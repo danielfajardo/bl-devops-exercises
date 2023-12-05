@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-front
+spec:
+  selector:
+    matchLabels:
+      app: todo-front
+  template:
+    metadata:
+      labels:
+        app: todo-front
+    spec:
+      containers:
+      - name: todo-front
+        image: todo-front:0.0.1
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 80
