@@ -1,0 +1,35 @@
+pipeline {
+    agent any
+    stages {
+        stage('Checkout') {
+            steps {
+                deleteDir()
+                
+                checkout scmGit(
+                    branches: [[name: 'main']],
+                    userRemoteConfigs: [[url: 'https://github.com/danielfajardo/bl-devops-exercises/']])
+                
+                dir('./03-ci-cd/01-jenkins/calculator') {
+                    sh 'chmod +x gradlew'
+                }
+            }
+        }
+        stage('Compile') {
+            steps {
+                dir('./03-ci-cd/01-jenkins/calculator') {
+                    echo "Compiling source code!"
+                    sh './gradlew compileJava'
+                    
+                }
+            }
+        }
+        stage('Unit Tests') {
+            steps {
+                dir('./03-ci-cd/01-jenkins/calculator') {
+                    echo "Launching tests!"
+                    sh './gradlew test'
+                }
+            }
+        }
+    }
+}
