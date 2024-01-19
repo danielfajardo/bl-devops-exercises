@@ -146,3 +146,104 @@ Ya tenemos configurada nuestra pipeline, solamente queda darle a *Build Now*.
 En este caso, vemos que hay 4 stages, pero solamente hemos configurado 3 en el pipeline. Esto es debido a que el stage *Declarative: Checkout SCM* es necesario para encontrar el fichero Jenkinsfile. Una vez descargado el repositorio, ya ejecuta la pipeline tal y como tenemos definida.
 
 Para este caso en concreto, nos podríamos ahorrar el checkout de nuestra pipeline, pero para casos en los que el repo que se descarga es diferente de dónde está alojado el fichero *Jenkinsfile* puede ser interesante esta configuración.
+
+## Ejercicio 2: Modificar la pipeline para que utilice la imagen Docker de Gradle como build agent
+
+En primer lugar tenemos que eliminar el contenedor anterior de Jenkins.
+
+```
+docker rm -f jenkins
+```
+A continuación, vamos a generar una imagen custom de Jenkins que contenga el cliente de Docker. Por ejemplo, podemos crear este Dockerfile.
+
+```dockerfile
+FROM jenkins/jenkins:lts
+
+USER root
+
+# install docker-cli
+RUN apt-get update && apt-get install -y lsb-release
+RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc \
+  https://download.docker.com/linux/debian/gpg
+RUN echo "deb [arch=$(dpkg --print-architecture) \
+  signed-by=/usr/share/keyrings/docker-archive-keyring.asc] \
+  https://download.docker.com/linux/debian \
+  $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list
+RUN apt-get update && apt-get install -y docker-ce-cli
+```
+
+Construimos la imagen.
+
+```
+docker build -f Dockerfile -t jenkins:0.0.1 .
+```
+
+Por último, levantamos un contenedor con la imagen de Docker in Docker y a la imagen de Jenkins le indicamos dónde está el host de Docker principalmente.
+
+```
+docker container run -d --name jenkins-docker \
+                        --network jenkins \
+                        --network-alias docker \
+                        --privileged \
+                        -p 2376:2376 \
+                        -v jenkins_home:/var/jenkins_home \
+                        -v jenkins-docker-certs:/certs/client \
+                        -e DOCKER_TLS_CERTDIR=/certs \
+                        docker:dind
+
+docker container run -d --name jenkins \
+                        --network jenkins \
+                        -p 8080:8080 \
+                        -p 50000:50000 \
+                        -v jenkins_home:/var/jenkins_home \
+                        -v jenkins-docker-certs:/certs/client:ro \
+                        -e DOCKER_HOST=tcp://docker:2376 \
+                        -e DOCKER_CERT_PATH=/certs/client \
+                        -e DOCKER_TLS_VERIFY=1 \
+                        jenkins:0.0.1
+```
+
+Tendremos que tener los siguientes contenedores corriendo.
+
+```shell
+$ docker ps
+CONTAINER ID   IMAGE           COMMAND                  CREATED         STATUS         PORTS                                              NAMES
+c29389e188db   docker:dind     "dockerd-entrypoint.…"   5 minutes ago   Up 5 minutes   2375/tcp, 0.0.0.0:2376->2376/tcp                   jenkins-docker
+30ac4218144c   jenkins:0.0.1   "/usr/bin/tini -- /u…"   6 minutes ago   Up 6 minutes   0.0.0.0:8080->8080/tcp, 0.0.0.0:50000->50000/tcp   jenkins
+```
+
+Al entrar en Jenkins, observaremos que todo sigue configurado tal y como teníamos anteriormente debido a la persistencia de datos.
+
+Ahora necesitamos instalar los plugins *Docker* y *Docker Pipeline*. Para ello desde el panel principal, realizamos la siguiente navegación.
+
+> Manage Jenkins &rarr; Plugins (System Configuration) &rarr; Available Plugins
+
+Buscamos ambos plugins y los instalamos.
+
+![](./images/06_plugins.png)
+
+A continuación nos indica el progreso de la descarga, en el que podemos indicarle que reinicie Jenkins cuando la instalación esté completa.
+
+![](./images/07_download.png)
+
+Al finalizar el proceso, si vamos a la pestaña de *Installed Plugins* veremos que los tenemos ya habilitados, por lo que podemos continuar con el ejercicio.
+
+![](./images/08_installed.png)
+
+Ahora podemos configurar nuestra pipeline, siguiendo los pasos del ejercicio anterior con la salvedad que nuestro Jenkinsfile en vez de tener declarado que puede correr en cualquier agente, tendrá declarado la siguiente imagen de Docker.
+
+```dockerfile
+agent {
+        docker {
+            image 'gradle:7.3-jdk17'
+        }
+    }
+```
+
+Ejecutamos una nueva build y vemos que todo sigue funcionando correctamente.
+
+![](./images/09_pipeline2_scm.png)
+
+Y si observamos el log, vemos que la build se ha ejecutado dentro de un contenedor.
+
+![](./images/10_pipeline2_log.png)
