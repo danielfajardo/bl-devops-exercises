@@ -22,7 +22,7 @@ RUN mkdir -p /usr/share/gradle /usr/share/gradle/ref \
   && echo "Checking download hash" \
   && echo "${GRADLE_SHA} /tmp/gradle.zip" | sha256sum -c - \
   && echo "Unziping gradle" && unzip -d /usr/share/gradle /tmp/gradle.zip \
-  && echo "Clenaing and setting links" && rm -f /tmp/gradle.zip \
+  && echo "Cleaning and setting links" && rm -f /tmp/gradle.zip \
   && ln -s /usr/share/gradle/gradle-${GRADLE_VERSION} /usr/bin/gradle
 
 ENV GRADLE_VERSION 6.6.1
