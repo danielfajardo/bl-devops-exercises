@@ -120,3 +120,49 @@ $ docker ps --filter "name=springapp"
 CONTAINER ID   IMAGE                                                                           COMMAND                  CREATED         STATUS         PORTS                    NAMES    
 740cca2d4e95   gitlab.local:5001/bootcamp/springapp:52001cf17d49a0fdc90126ccb0914eacad2cd899   "/bin/sh -c 'exec ja…"   2 minutes ago   Up 2 minutes   0.0.0.0:8080->8080/tcp   springapp
 ```
+
+## Ejercicio 2 - Comprobación de permisos para diferentes roles
+
+Para la realización de este ejercicio, vamos a crear un usuario nuevo.
+
+A continuación vamos a darle permisos para ver el repositorio de *springapp*. Sin embargo, el proyecto pertenece a un grupo, por lo que tenemos dos opciones:
+ - Dar permisos a nivel de grupo
+ - Dar permisos a nivel de proyecto
+
+Los permisos disponibles en GitLab son los siguientes:
+ - Guest (solo aplicable a proyectos *privados* e *internos*)
+ - Reporter
+ - Developer
+ - Maintainer
+ - Owner
+
+Si le asignamos permisos para el grupo, podrá ver el proyecto, pero también cualquier otro proyecto que exista dentro del grupo. Por lo tanto, hay que asignarle permisos al usuario solamente en el proyecto.
+
+Para comprobar esto podemos ver qué puede ver cada usuario. El usuario *Daniel* tiene el rol *Owner* tanto del grupo como del proyecto, por lo tanto podrá ver todos los proyectos disponibles en el grupo *bootcamp*.
+
+![](./images/11_projects_daniel.png)
+
+Sin embargo, el usuario *Daniel2*, solo puede ver el proyecto *springapp*
+
+![](./images/12_projects_daniel2.png)
+
+A continuación, vamos a asignarle al usuario diferentes permisos y comprobar qué acciones de las siguientes puede realizar:
+ - Hacer commit
+ - Ejecución de pipelines de manera manual
+ - Push del repositorio
+ - Pull del repositorio
+ - Crear Merge request
+ - Acceder a la administración del repositorio
+
+El resultado de las pruebas se puede consultar en la siguiente tabla.
+
+|Rol|Pull|Commit|Push|Pipeline|Merge Request|Administración|
+|-|-|-|-|-|-|-|
+|Guest|❌|❌|❌|❌|❌|❌|
+|Reporter|✔️|✔️|❌|❌|❌|❌|
+|Developer|✔️|✔️|✔️|✔️|✔️|❌|
+|Maintainer|✔️|✔️|✔️|✔️|✔️|✔️|
+
+Para más información sobre los permisos disponibles para cada rol, se puede consultar la página de GitLab: [Permissions and Roles](https://docs.gitlab.com/ee/user/permissions.html).
+
+Como conclusión podemos indicar que el rol *guest* sería apropiado para usuarios finales que necesiten ver por ejemplo la página wiki del repositorio, pero no queramos que tenga acceso al código fuente. El *reporter* podría ser útil por ejemplo para product owners, pues pueden por ejemplo gestionar *issues* y ver el código fuente, pero no hacer cambios sobre este. Por último, los roles *developer* y *maintainer* serían útiles para desarrolladores y technical leads respectivamente.
