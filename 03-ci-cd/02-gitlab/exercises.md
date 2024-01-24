@@ -166,3 +166,119 @@ El resultado de las pruebas se puede consultar en la siguiente tabla.
 Para más información sobre los permisos disponibles para cada rol, se puede consultar la página de GitLab: [Permissions and Roles](https://docs.gitlab.com/ee/user/permissions.html).
 
 Como conclusión podemos indicar que el rol *guest* sería apropiado para usuarios finales que necesiten ver por ejemplo la página wiki del repositorio, pero no queramos que tenga acceso al código fuente. El *reporter* podría ser útil por ejemplo para product owners, pues pueden por ejemplo gestionar *issues* y ver el código fuente, pero no hacer cambios sobre este. Por último, los roles *developer* y *maintainer* serían útiles para desarrolladores y technical leads respectivamente.
+
+## Ejercicio 3 - Comprobación de permisos en las pipelines
+
+En este ejercicio vamos a crear un segundo proyecto *springapp2* en el que vamos a clonar el repositorio de *springapp* utilizando dos métodos:
+ - [CI/CD job token](https://docs.gitlab.com/ee/ci/jobs/ci_job_token.html)
+ - [Deploy keys](https://docs.gitlab.com/ee/user/project/deploy_keys/)
+
+### CI/CD job token
+
+En el repositorio de código de *springapp*, vamos a autorizar que el proyecto *springapp2* pueda acceder a este.
+
+> Settings &rarr; CI/CD &rarr; Token Access &rarr; Add project
+
+Añadimos el proyecto personal introduciendo *Daniel2/springapp2*.
+
+![](./images/14_token_access.png)
+
+Comprobamos que el usuario *Daniel2* tiene acceso al repositorio, pues es un repositorio privado.
+
+![](./images/13_project_members.png)
+
+A continuación, nos vamos a nuestro proyecto *springapp2* para configurar una pipeline que haga el clonado a través del *CI_JOB_TOKEN*.
+
+```yaml
+before_script:
+  - apk update && apk add git
+
+stages:
+  - clone
+
+clone-job:
+  stage: clone
+  script:
+    - git clone http://gitlab-ci-token:$CI_JOB_TOKEN@gitlab.local:8888/bootcamp/springapp.git
+```
+
+Al ejecutar vemos que el clonado se ha realizado de manera satisfactoria.
+
+![](./images/15_clone_reporter.png)
+
+Ahora le cambiamos el rol al usuario *Daniel2* de *reporter* a *guest* y volvemos a lanzar la pipeline.
+
+![](./images/16_clone_guest.png)
+
+Al no tener permisos de lectura sobre el repositorio, el clonado falla indicando que no tenemos permisos para descargar el código.
+
+A continuación, eliminamos el usuario del proyecto.
+
+![](./images/17_clone_no_member.png)
+
+En este caso vuelve a fallar, pero en este caso debido a que ni siquiera tiene permisos para ver el proyecto en sí ya que es privado.
+
+¿Y si hacemos el proyecto *springapp* interno?
+
+![](./images/18_internal_project.png)
+
+En este caso, independientemente de si somos miembros o no, podremos clonar el repositorio.
+
+Finalmente, revocamos el acceso al proyecto *springapp2*, eliminamos el miembro *Daniel2* y lo volvemos a hacer privado.
+
+### Deploy keys
+
+En primer lugar vamos a crear nuestra clave SSH sin especificar passphrase, en caso de que no tengamos una. Para generarla, puedes seguir esta guía: [Generate an SSH key pair](https://docs.gitlab.com/ee/user/ssh.html#generate-an-ssh-key-pair).
+
+A continuación, añadimos la clave privada a nuestro proyecto *springapp2* y la guardamos como fichero.
+
+> Settings &rarr; CI/CD &rarr; Variables &rarr; Expand &rarr; Add variable
+
+![](./images/19_ssh_key.png)
+
+En el proyecto *springapp*, navegamos a la siguiente ruta para crear nuestra deploy key a la que no le vamos a dar permisos de escritura.
+
+> Settings &rarr; Repository &rarr; Deploy keys &rarr; Expand &rarr; Add new key
+
+![](./images/20_deploy_key.png)
+
+A continuación, creamos nuestra pipeline con la siguiente definición.
+
+```yaml
+before_script:
+  ## Instalación de ssh-agent en el contenedor de Docker
+  - 'command -v ssh-agent >/dev/null || ( apt-get update -y && apt-get install openssh-client -y )'
+  
+  ## Ejecución de ssh-agent dentro del entorno
+  - eval $(ssh-agent -s)
+  
+  ## Añadir la clave SSH_KEY al agente SSH
+  - chmod 400 "$SSH_KEY"
+  - ssh-add "$SSH_KEY"
+  
+  ## Creación del directorio SSH
+  - mkdir -p ~/.ssh
+  - chmod 700 ~/.ssh
+  
+  ## Añadir gitlab.local como host de confianza
+  - ssh-keyscan gitlab.local >> ~/.ssh/known_hosts
+  - chmod 644 ~/.ssh/known_hosts
+  
+  ## Instalación de git
+  - apk update && apk add git
+
+
+stages:
+  - clone
+
+clone-job:
+  stage: clone
+  script:
+    - git clone git@gitlab.local:bootcamp/springapp.git
+```
+
+Tras ejecutar la pipeline podemos ver que se ha clonado el repositorio de manera satisfactoria.
+
+![](./images/21_clone_ssh.png)
+
+A diferencia del método anterior, el caso de uso de este método es para interacciones no humanas, como por ejemplo un script de automatización.
