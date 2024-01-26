@@ -1,0 +1,27 @@
+name: Ejercicio 4 - Custom JavaScript Action
+
+on:
+    issues:
+        types:
+            - labeled
+
+jobs:
+    add-comment-job:
+        if: github.event.label.name == 'joke'
+        runs-on: ubuntu-latest
+        
+        permissions:
+            issues: write
+        
+        steps:
+            - name: Get custom Chuck Norris joke
+              id: joke
+              uses: danielfajardo/bl-devops-chucknorris-action@1.0.0
+
+            - name: Add comment in issue
+              run: gh issue comment "$NUMBER" --body "$BODY"
+              env:
+                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                GH_REPO: ${{ github.repository }}
+                NUMBER: ${{ github.event.issue.number }}
+                BODY: ${{ steps.joke.outputs.joke }}
