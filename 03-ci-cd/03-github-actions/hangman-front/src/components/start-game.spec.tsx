@@ -13,7 +13,7 @@ describe('StartGame component specs', () => {
 
     const items = await screen.findAllByRole('listitem');
 
-    expect(items).toHaveLength(1);
+    expect(items).toHaveLength(2);
     expect(getTopicsStub).toHaveBeenCalled();
   });
 });
