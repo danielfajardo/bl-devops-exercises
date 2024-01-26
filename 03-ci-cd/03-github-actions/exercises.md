@@ -221,3 +221,157 @@ Una vez realizado esto y hecho push al repositorio, nos vamos a Actions y ejecut
 Al finalizar el workflow, podremos ver los resultados haciendo click en la ejecución.
 
 ![](./images/03_03_cypress_results.png)
+
+## Ejercicio 4 - Crea una custom JavaScript Action
+
+En este ejercicio vamos a crear una custom JavaScript action basándonos en la API pública [chucknorris.io](https://api.chucknorris.io/), cuyo repositorio de github es [chuck-api](https://github.com/chucknorris-io/chuck-api). El objetivo es que se ejecute en un workflow cada vez que una *issue* tenga la etiqueta *joke*, mostrando por consola la broma y devolviéndola para que otra action pueda enviar un comentario en la propia issue.
+
+Para ello, creamos un nuevo repositorio público [danielfajardo/bl-devops-chucknorris-action](https://github.com/danielfajardo/bl-devops-chucknorris-action) que contendrá nuestra custom JavaScript action y lo clonamos a nuestro local.
+
+Abrimos el proyecto dentro de un Dev Container de Node.js y cuando esté listo, ejecutamos el siguiente comando.
+
+```shell
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ npm init -y
+Wrote to /workspaces/bl-devops-chucknorris-action/package.json:
+
+{
+  "name": "bl-devops-chucknorris-action",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
+```
+
+Creamos en la raíz el fichero *action.yml* con el siguiente contenido.
+
+```yaml
+name: 'bl-devops-chucknorris-action'
+description: 'Get custom Chuck Norris facts'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+```
+
+A continuación instalamos los paquetes @actions/core,  @actions/github y @vercel/ncc.
+
+```shell
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ npm install @actions/core
+
+added 6 packages, and audited 7 packages in 7s
+
+found 0 vulnerabilities
+
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ npm install @actions/github
+
+added 16 packages, and audited 23 packages in 8s
+
+found 0 vulnerabilities
+
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ npm install @vercel/ncc
+
+added 1 package, and audited 24 packages in 5s
+
+found 0 vulnerabilities
+
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ npm link @vercel/ncc
+
+changed 1 package, and audited 25 packages in 2s
+
+found 0 vulnerabilities
+```
+
+Creamos nuestro fichero *index.js* que contiene el siguiente código.
+
+```javascript
+const core = require('@actions/core');
+const github = require('@actions/github');
+
+try {
+    const name = github.context.actor;
+    
+    const url = `https://api.chucknorris.io/jokes/random?category=dev&name=${name}`;
+    
+    console.log(`Getting joke for ${name}`);
+
+    fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+            const joke = data.value;
+            console.log(`The joke is: ${joke}`);
+            core.setOutput('joke', joke);
+        })
+        .catch((error) => {
+            console.log(error);
+            core.setFailed(error);
+        });
+    
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+```
+
+A continuación, compilamos nuestro proyecto JavaScript ejecutando el siguiente comando.
+
+```shell
+node ➜ /workspaces/bl-devops-chucknorris-action (main) $ ncc build index.js -o dist
+ncc: Version 0.38.1
+ncc: Compiling file index.js into CJS
+1055kB  dist/index.js
+1055kB  [6941ms] - ncc 0.38.1
+```
+
+Este ha creado un nuevo directorio dist que contiene el fichero index.js que contiene el código que hemos creado junto con todos los módulos compilados necesarios para ejecutar la acción.
+
+A continuación hacemos push de los ficheros al repositorio remoto y nos vamos a la UI de github para crear una [release 1.0.0](https://github.com/danielfajardo/bl-devops-chucknorris-action/releases).
+
+![](./images/04_01_repo_action.png)
+
+En este punto nuestra action está disponible para ser usada desde un repositorio público o privado.
+
+Ahora creamos nuestro workflow en el fichero *ejercicio4.yml*, que contiene un paso que llama a nuestra custom JavaScript action y luego una segundo paso que toma el valor devuelto por esta y lo publica como comentario en la issue.
+
+```yaml
+name: Ejercicio 4 - Custom JavaScript Action
+
+on:
+    issues:
+        types:
+            - labeled
+
+jobs:
+    add-comment-job:
+        if: github.event.label.name == 'joke'
+        runs-on: ubuntu-latest
+        
+        permissions:
+            issues: write
+        
+        steps:
+            - name: Get custom Chuck Norris joke
+              id: joke
+              uses: danielfajardo/bl-devops-chucknorris-action@1.0.0
+
+            - name: Add comment in issue
+              run: gh issue comment "$NUMBER" --body "$BODY"
+              env:
+                GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                GH_REPO: ${{ github.repository }}
+                NUMBER: ${{ github.event.issue.number }}
+                BODY: ${{ steps.joke.outputs.joke }}
+```
+
+Para probarlo, simplemente abrimos una nueva issue y le ponemos una etiqueta con valor *joke*.
+
+![](./images/04_02_comments.png)
+
+Si nos vamos a los logs de las action, vemos que se ha ejecutado dos veces, la primera al crear el issue con la etiqueta joke y la segunda al quitar y añadir de nuevo la etiqueta.
+
+Si vamos a los logs y revisamos la salida de la JavaScript action, vemos que también devuelve por consola la broma.
+
+![](./images/04_03_logs.png)
