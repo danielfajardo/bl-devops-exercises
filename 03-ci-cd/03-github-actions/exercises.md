@@ -70,6 +70,7 @@ env:
   REGISTRY: ghcr.io
 ```
 Indicamos que el workflow se va a ejecutar manualmente con el evento *workflow_dispatch*. Además configuramos una entrada del usuario que contendrá las opciones de proyectos a construir. 
+
 ![](./images/02_01_run_workflow.png)
 
 Por último, creamos una variable de entorno que contiene el dominio del container registry de GitHub.
@@ -137,3 +138,86 @@ Si accedemos al paquete, vemos que se ha generado una versión con el formato de
 
 ![](./images/02_02_package_settings.png)
 
+## Ejercicio 3 - Crea un workflow que ejecute tests e2e
+
+En este ejercicio, vamos a crear un workflow que se ejecute de manera manual y lance los tests *End-to-End (e2e)*. Para ello, necesitaremos tener en ejecución tanto la api como el front. 
+
+Haciendo uso del workflow del ejercicio anterior, vamos a publicar la imagen de la api.
+
+![](./images/03_01_api_package.png)
+
+Ahora vamos a crear el fichero *ejercicio3.yml* con los siguientes fragmentos.
+
+```yaml
+name: Ejercicio 3 - Run E2E tests
+
+on:
+    workflow_dispatch:
+        inputs:
+            api_version:
+                description: 'API image version to use'
+                type: string
+                required: true
+            front_version:
+                description: 'Front image version to use'
+                type: string
+                required: true
+
+env:
+    REGISTRY: ghcr.io
+    API_VERSION: ${{ inputs.api_version }}
+    FRONT_VERSION: ${{ inputs.front_version }}
+```
+
+Declaramos el workflow como manual y requerimos que se introduzcan las versiones de las imagenes de la API y del front.
+
+```yaml
+jobs:
+    e2e-job:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check inputs
+              shell: bash
+              run: |
+                regex="^[a-z0-9]+([_-][a-z0-9]+)*$"
+                if [[ $API_VERSION =~ $regex  && $FRONT_VERSION =~ $regex ]]; then
+                  echo "The format of both versions is correct."
+                else
+                  echo "The format of one or both versions is incorrect. Please double check them."
+                  exit 1
+                fi
+                
+            - uses: actions/checkout@v4
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.repository_owner }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Start API and Front services
+              run: |
+                docker run -d -p 3001:3000 ${{ env.REGISTRY }}/danielfajardo/hangman-api:${{ env.API_VERSION }}
+                docker run -d -p 8080:8080 -e API_URL=http://localhost:3001 ${{ env.REGISTRY }}/danielfajardo/hangman-front:${{ env.FRONT_VERSION }}
+            
+            - name: Run e2e tests
+              uses: cypress-io/github-action@v6
+              with:
+                working-directory: ./03-ci-cd/03-github-actions/hangman-e2e/e2e
+```
+
+El workflow desarrollado es el siguiente:
+ 1. Comprobación de las entradas introducidas por el usuario para minimizar los vectores de ataque.
+ 2. Checkout del repositorio.
+ 3. Login al container registry de GitHub donde están alojadas las imágenes de la API y del front.
+ 4. Iniciamos ambos servicios.
+ 5. Ejecutamos con la action de cypress los tests e2e.
+
+Una vez realizado esto y hecho push al repositorio, nos vamos a Actions y ejecutamos el workflow *Ejercicio 3 - Run E2E tests*, indicando las versiones de cada imagen.
+
+![](./images/03_02_workflow.png)
+
+Al finalizar el workflow, podremos ver los resultados haciendo click en la ejecución.
+
+![](./images/03_03_cypress_results.png)
