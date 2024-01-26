@@ -1,0 +1,18 @@
+name: Ejercicio 1 - Build and test front project
+
+on:
+  pull_request:
+    paths: 
+    - '03-ci-cd/03-github-actions/hangman-front/**'
+
+jobs:
+  build-test-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the project and run the tests
+        working-directory: ./03-ci-cd/03-github-actions/hangman-front
+        run: |
+          npm ci
+          npm run build
+          npm test
